@@ -5,7 +5,9 @@
   "type": "module",
   "devDependencies": {
     "@prisma/client": "^6.2.0",
-    "@slack/web-api": "^7.8.0"
+    "@slack/web-api": "^7.8.0",
+    "@types/react": "19.0.3",
+    "typescript": "5.7.2"
   },
   "dependencies": {
     "next": "^15.1.4",
@@ -15,8 +17,9 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
-    "postinstall": "prisma generate"
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy"
   }
 }
