@@ -19,11 +19,11 @@ export default async function handler(req, res) {
     try {
       const parsedBody = JSON.parse(req.body.payload);
       const { actions, user, channel, message, trigger_id } = parsedBody;
-      console.log(actions);
+      // console.log(actions);
 
-      console.log(message.text);
+      // console.log(message.text);
 
-      console.log('parsedBody:', JSON.stringify(parsedBody, null, 2));
+      // console.log('parsedBody:', JSON.stringify(parsedBody, null, 2));
 
       if (actions && actions.length > 0) {
         let selectedAction = actions[0].value;
@@ -47,7 +47,13 @@ export default async function handler(req, res) {
           // Recordを更新
           await upsertRecord(user.name, ymd, channel.id, selectedAction);
 
-          main();
+          console.log('start getStatusCounts');
+          await getStatusCounts(channel.id, ymd).then((data) => {
+            console.log('date:');
+            console.log(data); // デバッグ用：取得したデータを確認
+          });
+
+          // main();
 
           // DBから最新の人数を取得
           // await getStatusCounts(channel.id, ymd)
