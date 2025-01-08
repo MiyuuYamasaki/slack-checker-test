@@ -8,12 +8,15 @@
     "@slack/web-api": "^7.8.0"
   },
   "dependencies": {
-    "prisma": "^6.2.0"
+    "next": "^15.1.4",
+    "prisma": "^6.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "scripts": {
-    "dev": "node app/api/server.ts",
-    "build": "prisma generate && vercel build",
-    "start": "node app/api/server.ts",
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
     "postinstall": "prisma generate"
   }
 }
