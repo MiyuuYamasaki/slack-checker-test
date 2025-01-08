@@ -49,7 +49,7 @@ async function sendSlackMessage(channelId) {
                 emoji: true,
               },
               action_id: 'button_office',
-              value: '本社勤務',
+              value: '本社',
             },
             {
               type: 'button',
@@ -59,13 +59,8 @@ async function sendSlackMessage(channelId) {
                 emoji: true,
               },
               action_id: 'button_remote',
-              value: '在宅勤務',
+              value: '在宅',
             },
-          ],
-        },
-        {
-          type: 'actions',
-          elements: [
             {
               type: 'button',
               text: {
@@ -74,6 +69,7 @@ async function sendSlackMessage(channelId) {
                 emoji: true,
               },
               action_id: 'button_list',
+              value: '一覧',
               style: 'primary',
             },
             {
