@@ -55,7 +55,8 @@ export default async function handler(req, res) {
 
             data.forEach((row) => {
               count++;
-              console.log(`row ${count}: ${row}`);
+              console.log(`row ${count}: ${JSON.stringify(row, null, 2)}`);
+
               // if (row === '本社') {
               //   officeCount = Number(row.count); // BigIntを通常の数値に変換
               // } else if (row.status === '在宅') {
