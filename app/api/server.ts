@@ -203,7 +203,7 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
   //   },
   // });
 
-  // console.log(record);
+  console.log('ymd:' + ymd);
 
   for (const member of members) {
     const existingRecord = await prisma.status.findFirst({
@@ -214,7 +214,6 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
       },
     });
     console.log('ymd:' + ymd + ' channel_id:' + channel + ' user_id:' + member);
-    console.log(existingRecord);
 
     const status = existingRecord?.status || '休暇'; // ステータスが無い場合は "休暇"
     if (!statusMap[status]) {
