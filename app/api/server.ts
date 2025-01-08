@@ -32,7 +32,7 @@ export default async function handler(req, res) {
         if (
           selectedAction === '本社' ||
           selectedAction === '在宅' ||
-          selectedAction === '退勤済'
+          selectedAction === '退勤'
         ) {
           const userName = await getUserName(botClient, user.id);
 
@@ -51,49 +51,19 @@ export default async function handler(req, res) {
           let remoteCount = 0;
           let leaveCount = 0;
 
-          console.log('start getStatusCounts');
           await getStatusCounts(channel.id, ymd).then(
             (data: { status: string; count: bigint }[]) => {
-              console.log('data:');
-              console.log(data); // デバッグ用：取得したデータを確認
-              let count = 0;
-
               data.forEach((row) => {
-                // count++;
-                // console.log(`row ${count}:`, row);
-                // console.log('data (JSON):', JSON.stringify(row, null, 2));
-
                 if (row.status === '本社') {
                   officeCount = Number(row.count); // BigInt を通常の数値に変換
                 } else if (row.status === '在宅') {
                   remoteCount = Number(row.count); // BigInt を通常の数値に変換
-                } else if (row.status === '退勤済') {
+                } else if (row.status === '退勤') {
                   leaveCount = Number(row.count);
                 }
               });
             }
           );
-          console.log(`office:${officeCount} remote:${remoteCount}`);
-
-          // main();
-
-          // DBから最新の人数を取得
-          // await getStatusCounts(channel.id, ymd)
-          //   .then((data) => {
-          //     console.log(data);
-          //     data.forEach((row) => {
-          //       if (row.status === '本社') {
-          //         officeCount = row.count || 0;
-          //       } else if (row.status === '在宅') {
-          //         remoteCount = row.count || 0;
-          //       } else if (row.status === '退勤済') {
-          //         leaveCount += row.count || 0;
-          //       }
-          //     });
-          //   })
-          //   .catch((error) => {
-          //     console.error(error);
-          //   });
 
           await updateMessage(
             channel.id,
@@ -338,7 +308,7 @@ async function updateMessage(
           },
           action_id: 'button_goHome',
           style: 'danger',
-          value: '退勤済',
+          value: '退勤',
         },
       ],
     },
@@ -366,16 +336,4 @@ async function getStatusCounts(channelId, ymd) {
       AND ymd = ${ymd}
     GROUP BY status
   `;
-}
-
-async function main() {
-  const channel = { id: 'example_channel_id' };
-  const ymd = '2025-01-08'; // 任意の日付
-
-  const initialCounts = { officeCount: 0, remoteCount: 0, leaveCount: 0 };
-
-  const counts = await getStatusCounts(channel.id, ymd).then((data) => {
-    console.log(data); // デバッグ用：取得したデータを確認
-  });
-  await prisma.$disconnect();
 }
