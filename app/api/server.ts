@@ -49,6 +49,7 @@ export default async function handler(req, res) {
 
           let officeCount = 0;
           let remoteCount = 0;
+          let leaveCount = 0;
 
           console.log('start getStatusCounts');
           await getStatusCounts(channel.id, ymd).then(
@@ -58,14 +59,16 @@ export default async function handler(req, res) {
               let count = 0;
 
               data.forEach((row) => {
-                count++;
-                console.log(`row ${count}:`, row);
+                // count++;
+                // console.log(`row ${count}:`, row);
                 // console.log('data (JSON):', JSON.stringify(row, null, 2));
 
                 if (row.status === '本社') {
                   officeCount = Number(row.count); // BigInt を通常の数値に変換
                 } else if (row.status === '在宅') {
                   remoteCount = Number(row.count); // BigInt を通常の数値に変換
+                } else if (row.status === '退勤済') {
+                  leaveCount = Number(row.count);
                 }
               });
             }
@@ -92,16 +95,14 @@ export default async function handler(req, res) {
           //     console.error(error);
           //   });
 
-          // type option = {
-          //   [key: string]: number;
-          // };
-          // const options: option = {
-          //   officeCount: 0,
-          //   remoteCount: 0,
-          //   leaveCount: 0,
-          // };
-
-          await updateMessage(channel.id, message.ts, message.text);
+          await updateMessage(
+            channel.id,
+            message.ts,
+            message.text,
+            officeCount,
+            remoteCount,
+            leaveCount
+          );
         } else if (selectedAction === '一覧') {
           // 一覧を表示
           // チャンネルメンバーを取得
@@ -281,11 +282,11 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
 async function updateMessage(
   channel: string,
   ts: string,
-  messageText: string
-  // options: string[number]
+  messageText: string,
+  officeCount: number,
+  remoteCount: number,
+  leaveCount: number
 ) {
-  // const { officeCount, remoteCount, leaveCount } = options;
-
   const blocks = [
     {
       type: 'section',
@@ -301,7 +302,7 @@ async function updateMessage(
           type: 'button',
           text: {
             type: 'plain_text',
-            text: '🏢 本社 ()',
+            text: `🏢 本社 (${officeCount})`,
             emoji: true,
           },
           action_id: 'button_office',
@@ -311,7 +312,7 @@ async function updateMessage(
           type: 'button',
           text: {
             type: 'plain_text',
-            text: '🏡 在宅 ()',
+            text: `🏡 在宅 (${remoteCount})`,
             emoji: true,
           },
           action_id: 'button_remote',
@@ -332,7 +333,7 @@ async function updateMessage(
           type: 'button',
           text: {
             type: 'plain_text',
-            text: `👋 退勤 ()`,
+            text: `👋 退勤 (${leaveCount})`,
             emoji: true,
           },
           action_id: 'button_goHome',
