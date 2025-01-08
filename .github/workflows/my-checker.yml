@@ -1,0 +1,30 @@
+name: Send status message
+
+# 定期実行スケジュール
+on:
+  schedule:
+    # 平日の日本時間AM7:00に実行 (UTCでは日曜日〜木曜日の22:00)
+    - cron: '0 22 * * 0-4'
+  workflow_dispatch: # 手動で実行できるようにする
+
+jobs:
+  send_slack_message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v3
+
+      - name: Node.js セットアップ
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: 依存関係のインストール
+        run: npm install
+        working-directory: app/action
+
+      - name: メッセージ送信
+        run: node github-action.js
+        working-directory: app/action
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}

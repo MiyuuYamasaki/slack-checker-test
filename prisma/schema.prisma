@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id             Int      @id @default(autoincrement())
+  slack_user_id  String   @unique
+  token          String
+}
+
+model record {
+  id              Int      @id @default(autoincrement())
+  ymd             String
+  selected_status String
+  leave_check     Int      @default(0)
+  channel_id      String
+  user_id         String
+}
+
+model state {
+  id              Int      @id @default(autoincrement())
+  ymd             String
+  status          String
+  user            String
+  channel         String
+}
