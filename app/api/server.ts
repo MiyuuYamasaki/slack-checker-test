@@ -196,14 +196,14 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
   const statusMap: { [key: string]: string[] } = {};
 
   const ymd = await getFormattedDate();
-  const record = await prisma.status.findFirst({
-    where: {
-      ymd: ymd,
-      channel_id: channel,
-    },
-  });
+  // const record = await prisma.status.findFirst({
+  //   where: {
+  //     ymd: ymd,
+  //     channel_id: channel,
+  //   },
+  // });
 
-  console.log(record);
+  // console.log(record);
 
   for (const member of members) {
     const existingRecord = await prisma.status.findFirst({
@@ -216,7 +216,7 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
     console.log('ymd:' + ymd + ' channel_id:' + channel + ' user_id:' + member);
     console.log(existingRecord);
 
-    const status = existingRecord?.selected_status || '休暇'; // ステータスが無い場合は "休暇"
+    const status = existingRecord?.status || '休暇'; // ステータスが無い場合は "休暇"
     if (!statusMap[status]) {
       statusMap[status] = [];
     }
@@ -275,7 +275,7 @@ async function updateMessage(
           type: 'button',
           text: {
             type: 'plain_text',
-            text: `🏢 本社 (0)`,
+            text: '🏢 本社 ()',
             emoji: true,
           },
           action_id: 'button_office',
@@ -285,7 +285,7 @@ async function updateMessage(
           type: 'button',
           text: {
             type: 'plain_text',
-            text: `🏠 在宅 (0)`,
+            text: '🏡 在宅 ()',
             emoji: true,
           },
           action_id: 'button_remote',
@@ -299,14 +299,14 @@ async function updateMessage(
             emoji: true,
           },
           action_id: 'button_list',
-          style: 'primary',
           value: '一覧',
+          style: 'primary',
         },
         {
           type: 'button',
           text: {
             type: 'plain_text',
-            text: `👋 退勤 (0)`,
+            text: `👋 退勤 ()`,
             emoji: true,
           },
           action_id: 'button_goHome',
