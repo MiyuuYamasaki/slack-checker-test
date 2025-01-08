@@ -47,23 +47,29 @@ export default async function handler(req, res) {
           // Recordを更新
           await upsertRecord(user.name, ymd, channel.id, selectedAction);
 
-          console.log('start getStatusCounts');
-          await getStatusCounts(channel.id, ymd).then((data: string[]) => {
-            console.log('date:');
-            console.log(data); // デバッグ用：取得したデータを確認
-            let count = 0;
+          let officeCount = 0;
+          let remoteCount = 0;
 
-            data.forEach((row) => {
-              count++;
-              console.log(`row ${count}: ${row}`);
-              console.log('date:', JSON.stringify(row, null, 2));
-              // if (row === '本社') {
-              //   officeCount = Number(row.count); // BigIntを通常の数値に変換
-              // } else if (row.status === '在宅') {
-              //   remoteCount = Number(row.count); // BigIntを通常の数値に変換
-              // }
-            });
-          });
+          console.log('start getStatusCounts');
+          await getStatusCounts(channel.id, ymd).then(
+            (data: { status: string; count: bigint }[]) => {
+              console.log('data:');
+              console.log(data); // デバッグ用：取得したデータを確認
+              let count = 0;
+
+              data.forEach((row) => {
+                count++;
+                console.log(`row ${count}:`, row);
+                console.log('data (JSON):', JSON.stringify(row, null, 2));
+
+                if (row.status === '本社') {
+                  officeCount = Number(row.count); // BigInt を通常の数値に変換
+                } else if (row.status === '在宅') {
+                  remoteCount = Number(row.count); // BigInt を通常の数値に変換
+                }
+              });
+            }
+          );
 
           // main();
 
