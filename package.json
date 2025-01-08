@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
   "devDependencies": {
     "@prisma/client": "^6.2.0",
     "@slack/web-api": "^7.8.0",
@@ -14,12 +20,5 @@
     "prisma": "^6.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
-  },
-  "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
-    "start": "next start",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate deploy"
   }
 }
