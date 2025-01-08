@@ -48,9 +48,20 @@ export default async function handler(req, res) {
           await upsertRecord(user.name, ymd, channel.id, selectedAction);
 
           console.log('start getStatusCounts');
-          await getStatusCounts(channel.id, ymd).then((data) => {
+          await getStatusCounts(channel.id, ymd).then((data: string[]) => {
             console.log('date:');
             console.log(data); // デバッグ用：取得したデータを確認
+            let count = 0;
+
+            data.forEach((row) => {
+              count++;
+              console.log(`row ${count}: ${row}`);
+              // if (row === '本社') {
+              //   officeCount = Number(row.count); // BigIntを通常の数値に変換
+              // } else if (row.status === '在宅') {
+              //   remoteCount = Number(row.count); // BigIntを通常の数値に変換
+              // }
+            });
           });
 
           // main();
