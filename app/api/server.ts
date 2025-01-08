@@ -206,7 +206,7 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
   console.log('ymd:' + ymd);
 
   for (const member of members) {
-    const existingRecord = await prisma.status.findFirst({
+    const existingRecord = await prisma.state.findFirst({
       where: {
         ymd: ymd,
         channel: channel,
