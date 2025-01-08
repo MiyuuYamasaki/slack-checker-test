@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "/app/api/server.js",
+      "src": "app/api/server.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/slack/actions",
-      "dest": "/app/api/server.js"
+      "dest": "app/api/server.js"
     }
   ]
 }
