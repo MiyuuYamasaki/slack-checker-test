@@ -1,4 +1,8 @@
 {
+  "name": "my-checker-test",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
   "devDependencies": {
     "prisma": "^6.2.0"
   },
