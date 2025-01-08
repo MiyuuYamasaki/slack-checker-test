@@ -11,9 +11,9 @@
     "@slack/web-api": "^7.8.0"
   },
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "node app/api/server.js",
     "build": "prisma generate && vercel build",
-    "start": "node server.js",
+    "start": "node app/api/server.js",
     "postinstall": "prisma generate"
   }
 }
