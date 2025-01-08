@@ -21,10 +21,10 @@ jobs:
 
       - name: 依存関係のインストール
         run: npm install
-        working-directory: app/action
+        working-directory: app/actions
 
       - name: メッセージ送信
         run: node github-action.js
-        working-directory: app/action
+        working-directory: app/actions
         env:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
