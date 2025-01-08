@@ -21,7 +21,7 @@ export default async function handler(req, res) {
       const { actions, user, channel, message, trigger_id } = parsedBody;
       console.log(actions);
 
-      console.log(message);
+      console.log(message.text);
 
       console.log('parsedBody:', JSON.stringify(parsedBody, null, 2));
 
@@ -76,7 +76,7 @@ export default async function handler(req, res) {
           //   leaveCount: 0,
           // };
 
-          await updateMessage(channel.id, message.ts, message);
+          await updateMessage(channel.id, message.ts, message.text);
         } else if (selectedAction === '一覧') {
           // 一覧を表示
           // チャンネルメンバーを取得
