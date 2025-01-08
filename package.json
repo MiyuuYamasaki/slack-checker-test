@@ -9,5 +9,11 @@
   "dependencies": {
     "@prisma/client": "^6.2.0",
     "@slack/web-api": "^7.8.0"
+  },
+  "scripts": {
+    "dev": "next dev --turbo",
+    "build": "prisma generate && vercel build",
+    "start": "node server.js",
+    "postinstall": "prisma generate"
   }
 }
