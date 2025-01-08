@@ -40,13 +40,41 @@ export default async function handler(req, res) {
             text: `${userName}さんが${selectedAction}を選択しました！`,
           });
 
+          const ymd = await getFormattedDate();
+
           // Recordを更新
-          await upsertRecord(
-            user.name,
-            await getFormattedDate(),
-            channel.id,
-            selectedAction
-          );
+          await upsertRecord(user.name, ymd, channel.id, selectedAction);
+
+          main();
+
+          // DBから最新の人数を取得
+          // await getStatusCounts(channel.id, ymd)
+          //   .then((data) => {
+          //     console.log(data);
+          //     data.forEach((row) => {
+          //       if (row.status === '本社') {
+          //         officeCount = row.count || 0;
+          //       } else if (row.status === '在宅') {
+          //         remoteCount = row.count || 0;
+          //       } else if (row.status === '退勤済') {
+          //         leaveCount += row.count || 0;
+          //       }
+          //     });
+          //   })
+          //   .catch((error) => {
+          //     console.error(error);
+          //   });
+
+          // type option = {
+          //   [key: string]: number;
+          // };
+          // const options: option = {
+          //   officeCount: 0,
+          //   remoteCount: 0,
+          //   leaveCount: 0,
+          // };
+
+          await updateMessage(channel.id, message.ts, message);
         } else if (selectedAction === '一覧') {
           // 一覧を表示
           // チャンネルメンバーを取得
@@ -128,11 +156,11 @@ async function upsertRecord(
 ) {
   try {
     // 既存のレコードがあるか確認
-    const existingRecord = await prisma.record.findFirst({
+    const existingRecord = await prisma.state.findFirst({
       where: {
-        user_id: userId,
+        user: userId,
         ymd: ymd,
-        channel_id: channelId,
+        channel: channelId,
       },
     });
 
@@ -148,12 +176,12 @@ async function upsertRecord(
           channel: channelId,
         },
       });
-    } else if (existingRecord.selected_status !== selectedStatus) {
+    } else if (existingRecord.status !== selectedStatus) {
       // レコードが存在し、selected_statusが異なる場合、更新
-      await prisma.record.update({
+      await prisma.state.update({
         where: { id: existingRecord.id },
         data: {
-          selected_status: selectedStatus,
+          status: selectedStatus,
         },
       });
     }
@@ -168,7 +196,7 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
   const statusMap: { [key: string]: string[] } = {};
 
   const ymd = await getFormattedDate();
-  const record = await prisma.record.findFirst({
+  const record = await prisma.status.findFirst({
     where: {
       ymd: ymd,
       channel_id: channel,
@@ -178,11 +206,11 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
   console.log(record);
 
   for (const member of members) {
-    const existingRecord = await prisma.record.findFirst({
+    const existingRecord = await prisma.status.findFirst({
       where: {
         ymd: ymd,
-        channel_id: channel,
-        user_id: member,
+        channel: channel,
+        user: member,
       },
     });
     console.log('ymd:' + ymd + ' channel_id:' + channel + ' user_id:' + member);
@@ -222,3 +250,105 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
     blocks: statusSections,
   };
 };
+
+// メッセージ更新
+async function updateMessage(
+  channel: string,
+  ts: string,
+  messageText: string
+  // options: string[number]
+) {
+  // const { officeCount, remoteCount, leaveCount } = options;
+
+  const blocks = [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: messageText,
+      },
+    },
+    {
+      type: 'actions',
+      elements: [
+        {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            text: `🏢 本社 (0)`,
+            emoji: true,
+          },
+          action_id: 'button_office',
+          value: '本社',
+        },
+        {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            text: `🏠 在宅 (0)`,
+            emoji: true,
+          },
+          action_id: 'button_remote',
+          value: '在宅',
+        },
+        {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            text: `📋 一覧`,
+            emoji: true,
+          },
+          action_id: 'button_list',
+          style: 'primary',
+          value: '一覧',
+        },
+        {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            text: `👋 退勤 (0)`,
+            emoji: true,
+          },
+          action_id: 'button_goHome',
+          style: 'danger',
+          value: '退勤済',
+        },
+      ],
+    },
+  ];
+
+  try {
+    const response = await botClient.chat.update({
+      channel,
+      ts,
+      text: messageText,
+      blocks,
+    });
+    return response;
+  } catch (error) {
+    console.error('Error updating message with buttons:', error);
+    throw error;
+  }
+}
+
+async function getStatusCounts(channelId, ymd) {
+  return await prisma.$queryRaw`
+    SELECT status, COUNT(*) as count
+    FROM state
+    WHERE channel = ${channelId}
+      AND ymd = ${ymd}
+    GROUP BY status
+  `;
+}
+
+async function main() {
+  const channel = { id: 'example_channel_id' };
+  const ymd = '2025-01-08'; // 任意の日付
+
+  const initialCounts = { officeCount: 0, remoteCount: 0, leaveCount: 0 };
+
+  const counts = await getStatusCounts(channel.id, ymd).then((data) => {
+    console.log(data); // デバッグ用：取得したデータを確認
+  });
+  await prisma.$disconnect();
+}
