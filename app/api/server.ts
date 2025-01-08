@@ -21,6 +21,8 @@ export default async function handler(req, res) {
       const { actions, user, channel, message, trigger_id } = parsedBody;
       console.log(actions);
 
+      console.log(message);
+
       console.log('parsedBody:', JSON.stringify(parsedBody, null, 2));
 
       if (actions && actions.length > 0) {
