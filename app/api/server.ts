@@ -249,7 +249,8 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
       text: {
         type: 'mrkdwn' as const,
         text: `${statusLabel} (${memberCount}名):\n${
-          statusMap[status].map((member) => `<@${member}>`).join('\n') || 'なし'
+          statusMap[status]?.map((member) => `<@${member}>`).join('\n') ||
+          'なし'
         }`,
       },
     };
