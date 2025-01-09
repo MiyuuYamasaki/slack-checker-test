@@ -4,9 +4,11 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // Slackのトークンを環境変数から取得
-
 const botToken = process.env.BOT_TOKEN;
 const botClient = new WebClient(botToken);
+
+// 当日日付を取得
+const ymd = await getFormattedDate();
 
 export const config = {
   api: {
@@ -26,6 +28,11 @@ export default async function handler(req, res) {
       // console.log('parsedBody:', JSON.stringify(parsedBody, null, 2));
 
       if (actions && actions.length > 0) {
+        const messageText = message.text;
+        const match = messageText.text.match(/\d{4}\/\d{2}\/\d{2}/);
+
+        console.log('match:' + match);
+
         let selectedAction = actions[0].value;
         console.log('selectedAction:' + selectedAction);
 
@@ -42,16 +49,14 @@ export default async function handler(req, res) {
             text: `${userName}さんが${selectedAction}を選択しました！`,
           });
 
-          const ymd = await getFormattedDate();
-
           // Recordを更新
-          await upsertRecord(user.name, ymd, channel.id, selectedAction);
+          await upsertRecord(user.name, channel.id, selectedAction);
 
           let officeCount = 0;
           let remoteCount = 0;
           let leaveCount = 0;
 
-          await getStatusCounts(channel.id, ymd).then(
+          await getStatusCounts(channel.id).then(
             (data: { status: string; count: bigint }[]) => {
               data.forEach((row) => {
                 if (row.status === '本社') {
@@ -68,7 +73,7 @@ export default async function handler(req, res) {
           await updateMessage(
             channel.id,
             message.ts,
-            message.text,
+            messageText,
             officeCount,
             remoteCount,
             leaveCount
@@ -82,20 +87,20 @@ export default async function handler(req, res) {
           const members = membersResponse.members || [];
 
           // メンバー情報を取得してBotを除外
-          const filteredMembers: string[] = [];
-          for (const memberId of members) {
-            const userInfo = await botClient.users.info({ user: memberId });
-            if (!userInfo.user?.is_bot && userInfo.user?.id !== 'USLACKBOT') {
-              filteredMembers.push(userInfo.user?.name || 'ERROR');
-            }
-          }
+          // const filteredMembers: string[] = [];
+          // for (const memberId of members) {
+          //   const userInfo = await botClient.users.info({ user: memberId });
+          //   if (!userInfo.user?.is_bot && userInfo.user?.id !== 'USLACKBOT') {
+          //     filteredMembers.push(userInfo.user?.name || 'ERROR');
+          //   }
+          // }
 
           console.log('▼ start createModal');
-          console.log(filteredMembers);
+          console.log(members);
           // モーダルを表示
           await botClient.views.open({
             trigger_id: trigger_id,
-            view: await createModal(filteredMembers, channel.id, prisma),
+            view: await createModal(members, channel.id, prisma),
           });
         }
 
@@ -142,13 +147,17 @@ async function getFormattedDate() {
   // 日本時間に合わせる（UTC + 9 時間）
   ymd.setHours(ymd.getHours() + 9);
 
-  return ymd.toISOString().split('T')[0].toString() || '';
+  // 年、月、日を取得
+  const year = ymd.getFullYear();
+  const month = String(ymd.getMonth() + 1).padStart(2, '0'); // 月は0から始まるため +1
+  const day = String(ymd.getDate()).padStart(2, '0'); // 日付を2桁に
+
+  return `${year}/${month}/${day}`;
 }
 
 // record操作
 async function upsertRecord(
   userId: string,
-  ymd: string,
   channelId: string,
   selectedStatus: string
 ) {
@@ -193,33 +202,24 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
   // メンバーを分類するためのマップを用意
   const statusMap: { [key: string]: string[] } = {};
 
-  const ymd = await getFormattedDate();
-  // const record = await prisma.status.findFirst({
-  //   where: {
-  //     ymd: ymd,
-  //     channel_id: channel,
-  //   },
-  // });
-
-  console.log('ymd:' + ymd);
-
   for (const member of members) {
-    const existingRecord = await prisma.state.findFirst({
-      where: {
-        ymd: ymd,
-        channel: channel,
-        user: member,
-      },
-    });
-    console.log('ymd:' + ymd + ' channel_id:' + channel + ' user_id:' + member);
+    // Bot以外で行う
+    const userInfo = await botClient.users.info({ user: member });
+    if (!userInfo.user?.is_bot && userInfo.user?.id !== 'USLACKBOT') {
+      const existingRecord = await prisma.state.findFirst({
+        where: {
+          ymd: ymd,
+          channel: channel,
+          user: member,
+        },
+      });
 
-    const status = existingRecord?.status || '休暇'; // ステータスが無い場合は "休暇"
-    if (!statusMap[status]) {
-      statusMap[status] = [];
+      const status = existingRecord?.status || '休暇'; // ステータスが無い場合は "休暇"
+      if (!statusMap[status]) {
+        statusMap[status] = [];
+      }
+      statusMap[status].push(member);
     }
-    statusMap[status].push(member);
-
-    console.log('status:' + status);
   }
 
   // 各ステータスのリストをモーダルのテキストとして生成
@@ -328,7 +328,7 @@ async function updateMessage(
   }
 }
 
-async function getStatusCounts(channelId, ymd) {
+async function getStatusCounts(channelId) {
   return await prisma.$queryRaw`
     SELECT status, COUNT(*) as count
     FROM state
