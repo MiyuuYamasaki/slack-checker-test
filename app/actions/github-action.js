@@ -81,7 +81,7 @@ async function sendSlackMessage(channelId) {
               },
               action_id: 'button_goHome',
               style: 'danger',
-              value: '退勤済',
+              value: '退勤',
             },
           ],
         },
