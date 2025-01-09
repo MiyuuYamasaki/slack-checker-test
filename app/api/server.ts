@@ -234,7 +234,7 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
 
   // ステータスごとのテキストを作成
   const statusSections = statusOrder.map((status) => {
-    const memberCount = statusMap[status].length;
+    const memberCount = statusMap[status]?.length || 0;
     const statusLabel =
       status === '本社'
         ? '🏢 本社勤務'
