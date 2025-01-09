@@ -9,7 +9,6 @@ const botClient = new WebClient(botToken);
 
 // 当日日付を取得
 const ymd = await getFormattedDate();
-console.log('ymd:' + ymd);
 
 export const config = {
   api: {
@@ -32,10 +31,10 @@ export default async function handler(req, res) {
         const messageText = message.text;
         console.log('messageText:' + messageText);
 
-        // if (messageText) {
-        //   const match = messageText.text.match(/\d{4}\/\d{2}\/\d{2}/);
-        //   console.log('match:' + match[0]);
-        // }
+        if (messageText) {
+          const match = messageText.match(/\d{4}\/\d{2}\/\d{2}/);
+          console.log('match:' + match[0]);
+        }
 
         let selectedAction = actions[0].value;
         console.log('selectedAction:' + selectedAction);
@@ -205,6 +204,7 @@ async function upsertRecord(
 const createModal = async (members: string[], channel: string, prisma: any) => {
   // メンバーを分類するためのマップを用意
   const statusMap: { [key: string]: string[] } = {};
+  console.log('ymd:' + ymd);
 
   for (const member of members) {
     // Bot以外で行う
