@@ -57,7 +57,7 @@ export default async function handler(req, res) {
             tasks.push(
               (async () => {
                 // Recordを更新
-                await upsertRecord(user.name, channel.id, selectedAction);
+                await upsertRecord(user.id, channel.id, selectedAction);
 
                 let officeCount = 0;
                 let remoteCount = 0;
@@ -102,10 +102,20 @@ export default async function handler(req, res) {
             });
             const members = membersResponse.members || [];
 
+            // 除外対象のユーザーID一覧
+            const excludedUserIds = ['U084L4J7MH6', 'U087M8J5EBX'];
+
+            // 除外ユーザーを除いたリストを作成
+            const filteredMembers = members.filter(
+              (member) => !excludedUserIds.includes(member)
+            );
+
+            console.log('filteredMembers:' + filteredMembers);
+
             // モーダルを表示
             await botClient.views.open({
               trigger_id: trigger_id,
-              view: await createModal(members, channel.id, prisma),
+              view: await createModal(filteredMembers, channel.id, prisma),
             });
           }
         } else {
@@ -207,28 +217,33 @@ async function upsertRecord(
 
 // モーダルを作成する関数
 const createModal = async (members: string[], channel: string, prisma: any) => {
-  // メンバーを分類するためのマップを用意
+  // State テーブルからチャンネルの該当レコードを一括取得
+  const existingRecords = await prisma.state.findMany({
+    where: {
+      channel: channel,
+      ymd: ymd,
+    },
+  });
+
+  // メンバーを分類
   const statusMap: { [key: string]: string[] } = {};
 
-  for (const member of members) {
-    // Bot以外で行う
-    const userInfo = await botClient.users.info({ user: member });
-    if (!userInfo.user?.is_bot && userInfo.user?.id !== 'USLACKBOT') {
-      const existingRecord = await prisma.state.findFirst({
-        where: {
-          ymd: ymd,
-          channel: channel,
-          user: userInfo.user?.name,
-        },
-      });
+  // 全メンバーを一旦「休暇」に分類
+  statusMap['休暇'] = [...members]; // 全てのメンバーを一旦「休暇」に入れる
 
-      const status = existingRecord?.status || '休暇'; // ステータスが無い場合は "休暇"
-      if (!statusMap[status]) {
-        statusMap[status] = [];
-      }
-      statusMap[status].push(member);
+  // existingRecords に基づいて分類を更新
+  for (const record of existingRecords) {
+    const index = statusMap['休暇'].indexOf(record.user); // 休暇リスト内でユーザーを探す
+    if (index !== -1) {
+      statusMap['休暇'].splice(index, 1); // 休暇から削除
     }
+
+    if (!statusMap[record.status]) {
+      statusMap[record.status] = [];
+    }
+    statusMap[record.status].push(record.user); // 該当ステータスに追加
   }
+
   // ステータスの順番を固定
   const statusOrder = ['本社', '在宅', '退勤', '休暇'];
 
@@ -269,31 +284,6 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
     },
     blocks: statusSections,
   };
-
-  // // 各ステータスのリストをモーダルのテキストとして生成
-  // const statusSections = Object.keys(statusMap).map((status) => ({
-  //   type: 'section',
-  //   text: {
-  //     type: 'mrkdwn' as const,
-  //     text: `*${status}*\n${
-  //       statusMap[status].map((member) => `<@${member}>`).join('\n') || 'なし'
-  //     }`,
-  //   },
-  // }));
-
-  // // モーダルデータ
-  // return {
-  //   type: 'modal' as const,
-  //   title: {
-  //     type: 'plain_text' as const,
-  //     text: 'チャンネルメンバー 一覧',
-  //   },
-  //   close: {
-  //     type: 'plain_text' as const,
-  //     text: '閉じる',
-  //   },
-  //   blocks: statusSections,
-  // };
 };
 
 // メッセージ更新
