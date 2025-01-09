@@ -1,4 +1,4 @@
-import { WebClient } from '@slack/web-api';
+import { View, WebClient } from '@slack/web-api';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -29,82 +29,72 @@ export default async function handler(req, res) {
 
       if (actions && actions.length > 0) {
         const messageText = message.text;
-        console.log('messageText:' + messageText);
+        const match = messageText.match(/\d{4}\/\d{2}\/\d{2}/);
 
-        if (messageText) {
-          const match = messageText.match(/\d{4}\/\d{2}\/\d{2}/);
-          console.log('match:' + match[0]);
-        }
+        if (messageText === match[0]) {
+          let selectedAction = actions[0].value;
+          console.log('selectedAction:' + selectedAction);
 
-        let selectedAction = actions[0].value;
-        console.log('selectedAction:' + selectedAction);
+          if (
+            selectedAction === '本社' ||
+            selectedAction === '在宅' ||
+            selectedAction === '退勤'
+          ) {
+            const userName = await getUserName(botClient, user.id);
 
-        if (
-          selectedAction === '本社' ||
-          selectedAction === '在宅' ||
-          selectedAction === '退勤'
-        ) {
-          const userName = await getUserName(botClient, user.id);
+            await botClient.chat.postMessage({
+              channel: channel.id,
+              thread_ts: message.ts,
+              text: `${userName}さんが${selectedAction}を選択しました！`,
+            });
 
-          await botClient.chat.postMessage({
-            channel: channel.id,
-            thread_ts: message.ts,
-            text: `${userName}さんが${selectedAction}を選択しました！`,
-          });
+            // Recordを更新
+            await upsertRecord(user.name, channel.id, selectedAction);
 
-          // Recordを更新
-          await upsertRecord(user.name, channel.id, selectedAction);
+            let officeCount = 0;
+            let remoteCount = 0;
+            let leaveCount = 0;
 
-          let officeCount = 0;
-          let remoteCount = 0;
-          let leaveCount = 0;
+            await getStatusCounts(channel.id).then(
+              (data: { status: string; count: bigint }[]) => {
+                data.forEach((row) => {
+                  if (row.status === '本社') {
+                    officeCount = Number(row.count); // BigInt を通常の数値に変換
+                  } else if (row.status === '在宅') {
+                    remoteCount = Number(row.count); // BigInt を通常の数値に変換
+                  } else if (row.status === '退勤') {
+                    leaveCount = Number(row.count);
+                  }
+                });
+              }
+            );
 
-          await getStatusCounts(channel.id).then(
-            (data: { status: string; count: bigint }[]) => {
-              data.forEach((row) => {
-                if (row.status === '本社') {
-                  officeCount = Number(row.count); // BigInt を通常の数値に変換
-                } else if (row.status === '在宅') {
-                  remoteCount = Number(row.count); // BigInt を通常の数値に変換
-                } else if (row.status === '退勤') {
-                  leaveCount = Number(row.count);
-                }
-              });
-            }
-          );
+            await updateMessage(
+              channel.id,
+              message.ts,
+              messageText,
+              officeCount,
+              remoteCount,
+              leaveCount
+            );
+          } else if (selectedAction === '一覧') {
+            // 一覧を表示
+            // チャンネルメンバーを取得
+            const membersResponse = await botClient.conversations.members({
+              channel: channel.id,
+            });
+            const members = membersResponse.members || [];
 
-          await updateMessage(
-            channel.id,
-            message.ts,
-            messageText,
-            officeCount,
-            remoteCount,
-            leaveCount
-          );
-        } else if (selectedAction === '一覧') {
-          // 一覧を表示
-          // チャンネルメンバーを取得
-          const membersResponse = await botClient.conversations.members({
-            channel: channel.id,
-          });
-          const members = membersResponse.members || [];
-
-          // メンバー情報を取得してBotを除外
-          // const filteredMembers: string[] = [];
-          // for (const memberId of members) {
-          //   const userInfo = await botClient.users.info({ user: memberId });
-          //   if (!userInfo.user?.is_bot && userInfo.user?.id !== 'USLACKBOT') {
-          //     filteredMembers.push(userInfo.user?.name || 'ERROR');
-          //   }
-          // }
-
-          console.log('▼ start createModal');
-          console.log(members);
-          // モーダルを表示
-          await botClient.views.open({
-            trigger_id: trigger_id,
-            view: await createModal(members, channel.id, prisma),
-          });
+            console.log('▼ start createModal');
+            console.log(members);
+            // モーダルを表示
+            await botClient.views.open({
+              trigger_id: trigger_id,
+              view: await createModal(members, channel.id, prisma),
+            });
+          }
+        } else {
+          openModal(trigger_id);
         }
 
         res.status(200).send('Status updated');
@@ -340,4 +330,31 @@ async function getStatusCounts(channelId) {
       AND ymd = ${ymd}
     GROUP BY status
   `;
+}
+
+// 画面日付と当日日付がアンマッチの場合
+async function openModal(trigger_id: string) {
+  const modalView: View = {
+    type: 'modal',
+    title: {
+      type: 'plain_text',
+      text: 'エラー 😢',
+      emoji: true,
+    },
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '当日データ以外の参照・変更はできません。',
+        },
+      },
+    ],
+  };
+
+  // モーダルウィンドウを開く
+  await botClient.views.open({
+    trigger_id: trigger_id,
+    view: modalView,
+  });
 }
