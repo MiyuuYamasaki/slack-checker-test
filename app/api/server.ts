@@ -31,7 +31,9 @@ export default async function handler(req, res) {
         const messageText = message.text;
         const match = messageText.match(/\d{4}\/\d{2}\/\d{2}/);
 
-        if (messageText === match[0]) {
+        console.log(messageText + ':' + match[0]);
+
+        if (messageText == match[0]) {
           let selectedAction = actions[0].value;
           console.log('selectedAction:' + selectedAction);
 
