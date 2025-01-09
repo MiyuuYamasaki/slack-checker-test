@@ -13,6 +13,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Install dependencies
+        run: npm install
+        working-directory: app/actions
+
       - name: Execute delete query in Supabase
         run: node delete-record.js
         working-directory: app/actions
