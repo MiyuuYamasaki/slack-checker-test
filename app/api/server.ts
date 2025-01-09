@@ -206,7 +206,7 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
         where: {
           ymd: ymd,
           channel: channel,
-          user: member,
+          user: userInfo.user?.name,
         },
       });
 
@@ -324,6 +324,7 @@ async function updateMessage(
   }
 }
 
+// カウント用クエリ
 async function getStatusCounts(channelId) {
   return await prisma.$queryRaw`
     SELECT status, COUNT(*) as count
