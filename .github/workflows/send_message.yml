@@ -23,7 +23,7 @@ jobs:
         working-directory: app/actions
 
       - name: メッセージ送信
-        run: node github-action.js
+        run: node send_message.js
         working-directory: app/actions
         env:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
