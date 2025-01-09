@@ -16,7 +16,7 @@ function getFormattedDate() {
   const day = String(now.getDate()).padStart(2, '0');
 
   // 曜日を取得（日本語）
-  const daysOfWeek = ['月', '火', '水', '木', '金'];
+  const daysOfWeek = ['日', '月', '火', '水', '木', '金', '土'];
   const dayOfWeek = daysOfWeek[now.getDay()];
 
   return `${year}/${month}/${day}(${dayOfWeek})`; // 例: 2024/12/05(木)

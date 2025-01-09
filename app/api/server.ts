@@ -31,8 +31,7 @@ export default async function handler(req, res) {
         const messageText = message.text;
         const match = messageText.match(/\d{4}\/\d{2}\/\d{2}/);
 
-        console.log(ymd + ':' + match[0]);
-
+        // 当日分のみ処理
         if (ymd === match[0]) {
           let selectedAction = actions[0].value;
 
@@ -95,28 +94,35 @@ export default async function handler(req, res) {
               res.status(500).send('Status updated');
             }
           } else if (selectedAction === '一覧') {
-            // 一覧を表示
-            // チャンネルメンバーを取得
-            const membersResponse = await botClient.conversations.members({
-              channel: channel.id,
-            });
-            const members = membersResponse.members || [];
+            try {
+              // 一覧を表示
+              // チャンネルメンバーを取得
+              const membersResponse = await botClient.conversations.members({
+                channel: channel.id,
+              });
+              const members = membersResponse.members || [];
 
-            // 除外対象のユーザーID一覧
-            const excludedUserIds = ['U084L4J7MH6', 'U087M8J5EBX'];
+              // 除外対象のユーザーID一覧
+              const excludedUserIds = [
+                'U084L4J7MH6',
+                'U087M8J5EBX',
+                'U086NCU8PUY',
+                'U086QP71G7K',
+              ];
 
-            // 除外ユーザーを除いたリストを作成
-            const filteredMembers = members.filter(
-              (member) => !excludedUserIds.includes(member)
-            );
+              // 除外ユーザーを除いたリストを作成
+              const filteredMembers = members.filter(
+                (member) => !excludedUserIds.includes(member)
+              );
 
-            console.log('filteredMembers:' + filteredMembers);
-
-            // モーダルを表示
-            await botClient.views.open({
-              trigger_id: trigger_id,
-              view: await createModal(filteredMembers, channel.id, prisma),
-            });
+              // モーダルを表示
+              await botClient.views.open({
+                trigger_id: trigger_id,
+                view: await createModal(filteredMembers, channel.id, prisma),
+              });
+            } catch (err) {
+              console.log('ERROR:' + err);
+            }
           }
         } else {
           await openModal(trigger_id);
@@ -257,13 +263,13 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
         ? '🏡 在宅勤務'
         : status === '退勤'
         ? '👋 退勤済'
-        : ':zzz: 休暇';
+        : ':zzz: 休暇(回答無)';
 
     return {
       type: 'section',
       text: {
         type: 'mrkdwn' as const,
-        text: `${statusLabel} (${memberCount}名):\n${
+        text: `*${statusLabel} (${memberCount}名):*\n${
           statusMap[status]?.map((member) => `<@${member}>`).join('\n') ||
           'なし'
         }`,
@@ -276,7 +282,7 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
     type: 'modal' as const,
     title: {
       type: 'plain_text' as const,
-      text: 'チャンネルメンバー 一覧',
+      text: `*${ymd} 勤務状況一覧*`,
     },
     close: {
       type: 'plain_text' as const,
