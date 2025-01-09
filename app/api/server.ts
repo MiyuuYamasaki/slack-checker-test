@@ -230,16 +230,28 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
     }
   }
 
-  // 各ステータスのリストをモーダルのテキストとして生成
-  const statusSections = Object.keys(statusMap).map((status) => ({
-    type: 'section',
-    text: {
-      type: 'mrkdwn' as const,
-      text: `*${status}*\n${
-        statusMap[status].map((member) => `<@${member}>`).join('\n') || 'なし'
-      }`,
-    },
-  }));
+  // ステータスごとのテキストを作成
+  const statusSections = Object.keys(statusMap).map((status) => {
+    const memberCount = statusMap[status].length;
+    const statusLabel =
+      status === '本社'
+        ? '🏢 本社勤務'
+        : status === '在宅'
+        ? '🏡 在宅勤務'
+        : status === '退勤'
+        ? '👋 退勤済'
+        : ':zzz: 休暇';
+
+    return {
+      type: 'section',
+      text: {
+        type: 'mrkdwn' as const,
+        text: `${statusLabel} (${memberCount}名):\n${
+          statusMap[status].map((member) => `<@${member}>`).join('\n') || 'なし'
+        }`,
+      },
+    };
+  });
 
   // モーダルデータ
   return {
@@ -254,6 +266,31 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
     },
     blocks: statusSections,
   };
+
+  // // 各ステータスのリストをモーダルのテキストとして生成
+  // const statusSections = Object.keys(statusMap).map((status) => ({
+  //   type: 'section',
+  //   text: {
+  //     type: 'mrkdwn' as const,
+  //     text: `*${status}*\n${
+  //       statusMap[status].map((member) => `<@${member}>`).join('\n') || 'なし'
+  //     }`,
+  //   },
+  // }));
+
+  // // モーダルデータ
+  // return {
+  //   type: 'modal' as const,
+  //   title: {
+  //     type: 'plain_text' as const,
+  //     text: 'チャンネルメンバー 一覧',
+  //   },
+  //   close: {
+  //     type: 'plain_text' as const,
+  //     text: '閉じる',
+  //   },
+  //   blocks: statusSections,
+  // };
 };
 
 // メッセージ更新
