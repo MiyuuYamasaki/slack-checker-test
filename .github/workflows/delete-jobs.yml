@@ -1,0 +1,21 @@
+name: Delete records
+
+on:
+  schedule:
+    # 日本時間の夜中0:00に実行 (UTCでは15:00)
+    - cron: '0 15 * * 0-4'
+  workflow_dispatch: # 手動で実行できるようにする
+
+jobs:
+  delete_records:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Execute delete query in Supabase
+        run: node delete-record.js
+        working-directory: app/actions
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}

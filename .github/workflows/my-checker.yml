@@ -1,11 +1,9 @@
-name: Scheduled Jobs
+name: Send message
 
 on:
   schedule:
-    # send_slack_messageジョブを平日の日本時間AM7:00に実行 (UTCでは日曜日〜木曜日の22:00)
+    # 平日の日本時間AM7:00に実行 (UTCでは日曜日〜木曜日の22:00)
     - cron: '0 22 * * 0-4'
-    # delete_recordsジョブを日本時間の夜中0:00に実行 (UTCでは15:00)
-    - cron: '0 15 * * 0-4'
   workflow_dispatch: # 手動で実行できるようにする
 
 jobs:
@@ -29,16 +27,3 @@ jobs:
         working-directory: app/actions
         env:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-
-  delete_records:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Execute delete query in Supabase
-        run: node delete-record.js
-        working-directory: app/actions
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
