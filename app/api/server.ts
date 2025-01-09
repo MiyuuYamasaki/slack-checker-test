@@ -37,48 +37,63 @@ export default async function handler(req, res) {
           let selectedAction = actions[0].value;
           console.log('selectedAction:' + selectedAction);
 
-          if (
-            selectedAction === '本社' ||
-            selectedAction === '在宅' ||
-            selectedAction === '退勤'
-          ) {
-            const userName = await getUserName(botClient, user.id);
+          if (selectedAction != '一覧') {
+            const tasks = [];
 
-            await botClient.chat.postMessage({
-              channel: channel.id,
-              thread_ts: message.ts,
-              text: `${userName}さんが${selectedAction}を選択しました！`,
-            });
+            tasks.push(
+              (async () => {
+                // ユーザー名を取得
+                const userName = await getUserName(botClient, user.id);
 
-            // Recordを更新
-            await upsertRecord(user.name, channel.id, selectedAction);
-
-            let officeCount = 0;
-            let remoteCount = 0;
-            let leaveCount = 0;
-
-            await getStatusCounts(channel.id).then(
-              (data: { status: string; count: bigint }[]) => {
-                data.forEach((row) => {
-                  if (row.status === '本社') {
-                    officeCount = Number(row.count); // BigInt を通常の数値に変換
-                  } else if (row.status === '在宅') {
-                    remoteCount = Number(row.count); // BigInt を通常の数値に変換
-                  } else if (row.status === '退勤') {
-                    leaveCount = Number(row.count);
-                  }
+                // メッセージを投稿
+                await botClient.chat.postMessage({
+                  channel: channel.id,
+                  thread_ts: message.ts,
+                  text: `${userName}さんが${selectedAction}を選択しました！`,
                 });
-              }
+              })()
             );
 
-            await updateMessage(
-              channel.id,
-              message.ts,
-              messageText,
-              officeCount,
-              remoteCount,
-              leaveCount
+            tasks.push(
+              (async () => {
+                // Recordを更新
+                await upsertRecord(user.name, channel.id, selectedAction);
+
+                let officeCount = 0;
+                let remoteCount = 0;
+                let leaveCount = 0;
+
+                await getStatusCounts(channel.id).then(
+                  (data: { status: string; count: bigint }[]) => {
+                    data.forEach((row) => {
+                      if (row.status === '本社') {
+                        officeCount = Number(row.count); // BigInt を通常の数値に変換
+                      } else if (row.status === '在宅') {
+                        remoteCount = Number(row.count); // BigInt を通常の数値に変換
+                      } else if (row.status === '退勤') {
+                        leaveCount = Number(row.count);
+                      }
+                    });
+                  }
+                );
+
+                await updateMessage(
+                  channel.id,
+                  message.ts,
+                  messageText,
+                  officeCount,
+                  remoteCount,
+                  leaveCount
+                );
+              })()
             );
+
+            try {
+              Promise.all(tasks);
+            } catch (e) {
+              console.log('ERROR:' + e);
+              res.status(500).send('Status updated');
+            }
           } else if (selectedAction === '一覧') {
             // 一覧を表示
             // チャンネルメンバーを取得
@@ -87,8 +102,6 @@ export default async function handler(req, res) {
             });
             const members = membersResponse.members || [];
 
-            console.log('▼ start createModal');
-            console.log(members);
             // モーダルを表示
             await botClient.views.open({
               trigger_id: trigger_id,
@@ -96,7 +109,7 @@ export default async function handler(req, res) {
             });
           }
         } else {
-          openModal(trigger_id);
+          await openModal(trigger_id);
         }
 
         res.status(200).send('Status updated');
@@ -196,7 +209,6 @@ async function upsertRecord(
 const createModal = async (members: string[], channel: string, prisma: any) => {
   // メンバーを分類するためのマップを用意
   const statusMap: { [key: string]: string[] } = {};
-  console.log('ymd:' + ymd);
 
   for (const member of members) {
     // Bot以外で行う
