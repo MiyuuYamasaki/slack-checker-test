@@ -35,9 +35,9 @@ export default async function handler(req, res) {
 
         if (ymd === match[0]) {
           let selectedAction = actions[0].value;
-          console.log('selectedAction:' + selectedAction);
 
           if (selectedAction != '一覧') {
+            console.log('selectedAction:' + selectedAction);
             const tasks = [];
 
             tasks.push(
@@ -89,7 +89,7 @@ export default async function handler(req, res) {
             );
 
             try {
-              Promise.all(tasks);
+              await Promise.all(tasks);
             } catch (e) {
               console.log('ERROR:' + e);
               res.status(500).send('Status updated');
