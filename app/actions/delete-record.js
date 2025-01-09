@@ -1,27 +1,25 @@
-import { createClient } from '@supabase/supabase-js';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export default async (req, res) => {
-  const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY
-  );
-
   if (req.method === 'POST') {
     try {
-      const { error } = await supabase.from('state').delete();
+      // Prismaを使って 'state' テーブルから全てのレコードを削除
+      const deleteResult = await prisma.state.deleteMany();
 
-      if (error) {
-        return res
-          .status(500)
-          .json({ message: 'Failed to delete records', error });
+      if (deleteResult.count === 0) {
+        return res.status(404).json({ message: 'No records to delete' });
       }
+
       return res.status(200).json({ message: 'Records deleted successfully' });
     } catch (err) {
+      console.error('Error deleting records:', err);
       return res
         .status(500)
         .json({ message: 'Internal server error', error: err });
     }
   } else {
-    res.status(405).json({ message: 'Method not allowed' });
+    return res.status(405).json({ message: 'Method not allowed' });
   }
 };
