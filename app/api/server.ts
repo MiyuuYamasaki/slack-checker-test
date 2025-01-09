@@ -229,9 +229,11 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
       statusMap[status].push(member);
     }
   }
+  // ステータスの順番を固定
+  const statusOrder = ['本社', '在宅', '退勤', '休暇'];
 
   // ステータスごとのテキストを作成
-  const statusSections = Object.keys(statusMap).map((status) => {
+  const statusSections = statusOrder.map((status) => {
     const memberCount = statusMap[status].length;
     const statusLabel =
       status === '本社'
