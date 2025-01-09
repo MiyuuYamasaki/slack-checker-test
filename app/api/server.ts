@@ -21,10 +21,8 @@ export default async function handler(req, res) {
     try {
       const parsedBody = JSON.parse(req.body.payload);
       const { actions, user, channel, message, trigger_id } = parsedBody;
-      // console.log(actions);
 
-      // console.log(message.text);
-
+      // 確認用
       // console.log('parsedBody:', JSON.stringify(parsedBody, null, 2));
 
       if (actions && actions.length > 0) {
@@ -95,7 +93,6 @@ export default async function handler(req, res) {
             }
           } else if (selectedAction === '一覧') {
             try {
-              // 一覧を表示
               // チャンネルメンバーを取得
               const membersResponse = await botClient.conversations.members({
                 channel: channel.id,
@@ -104,10 +101,10 @@ export default async function handler(req, res) {
 
               // 除外対象のユーザーID一覧
               const excludedUserIds = [
-                'U084L4J7MH6',
-                'U087M8J5EBX',
-                'U086NCU8PUY',
-                'U086QP71G7K',
+                'U084L4J7MH6', // 出勤チェッカー（旧）
+                'U087M8J5EBX', // 出勤チェッカー（新）
+                'U086NCU8PUY', // TEST BOT
+                'U086QP71G7K', // SUNSUNくん
               ];
 
               // 除外ユーザーを除いたリストを作成
@@ -115,7 +112,7 @@ export default async function handler(req, res) {
                 (member) => !excludedUserIds.includes(member)
               );
 
-              // モーダルを表示
+              // 一覧を表示
               await botClient.views.open({
                 trigger_id: trigger_id,
                 view: await createModal(filteredMembers, channel.id, prisma),
@@ -125,10 +122,14 @@ export default async function handler(req, res) {
             }
           }
         } else {
-          await openModal(trigger_id);
+          // 操作不可のメッセージ表示
+          try {
+            await openModal(trigger_id);
+          } catch (err) {
+            console.log('ERROR:' + err);
+          }
         }
-
-        res.status(200).send('Status updated');
+        res.status(200).send('All Complete');
       }
     } catch (error) {
       console.error('Error processing Slack interaction:', error);
@@ -179,7 +180,7 @@ async function getFormattedDate() {
   return `${year}/${month}/${day}`;
 }
 
-// record操作
+// DB操作
 async function upsertRecord(
   userId: string,
   channelId: string,
@@ -282,7 +283,7 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
     type: 'modal' as const,
     title: {
       type: 'plain_text' as const,
-      text: `*${ymd} 勤務状況一覧*`,
+      text: `${ymd} 勤務状況一覧`,
     },
     close: {
       type: 'plain_text' as const,
