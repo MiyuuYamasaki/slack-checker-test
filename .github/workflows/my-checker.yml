@@ -1,13 +1,11 @@
-name: Send status message
+name: Scheduled Jobs
 
-# 定期実行スケジュール
 on:
   schedule:
-    # 平日の日本時間AM7:00に実行 (UTCでは日曜日〜木曜日の22:00)
+    # send_slack_messageジョブを平日の日本時間AM7:00に実行 (UTCでは日曜日〜木曜日の22:00)
     - cron: '0 22 * * 0-4'
-
-    # DBリフレッシュ
-    - cron: '0 15 * * 0-4' # 15:00 UTCは日本時間24:00
+    # delete_recordsジョブを日本時間の夜中0:00に実行 (UTCでは15:00)
+    - cron: '0 15 * * 0-4'
   workflow_dispatch: # 手動で実行できるようにする
 
 jobs:
