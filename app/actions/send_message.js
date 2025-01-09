@@ -1,7 +1,8 @@
 import { WebClient } from '@slack/web-api';
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN;
-const CHANNEL_ID = 'C083QUBKU9L'; // 送信先のチャンネルID
+const CHANNEL_ID1 = 'C083QUBKU9L'; // 送信先のチャンネルID
+const CHANNEL_ID2 = 'C07HLMDLB1U';
 
 // 日付のフォーマットを変更
 function getFormattedDate() {
@@ -93,4 +94,5 @@ async function sendSlackMessage(channelId) {
   }
 }
 
-sendSlackMessage(CHANNEL_ID); // ボタン付きメッセージ送信
+sendSlackMessage(CHANNEL_ID1);
+sendSlackMessage(CHANNEL_ID2);
