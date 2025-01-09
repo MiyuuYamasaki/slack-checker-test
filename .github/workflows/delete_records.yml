@@ -18,8 +18,9 @@ jobs:
         working-directory: app/actions
 
       - name: Execute delete query in Supabase
-        run: node delete-record.js
-        working-directory: app/actions
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          node delete-record.js || echo "Error occurred during script execution.
+        working-directory: app/actions
