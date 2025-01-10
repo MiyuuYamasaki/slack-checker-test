@@ -32,9 +32,9 @@ export default async function handler(req, res) {
         // 当日分のみ処理
         if (ymd === match[0]) {
           let selectedAction = actions[0].value;
+          console.log('▼ Start action : ' + selectedAction);
 
           if (selectedAction != '一覧') {
-            console.log('selectedAction:' + selectedAction);
             const tasks = [];
 
             tasks.push(
@@ -87,6 +87,7 @@ export default async function handler(req, res) {
 
             try {
               await Promise.all(tasks);
+              console.log('Complete all tasks');
             } catch (e) {
               console.log('ERROR:' + e);
               res.status(500).send('Status updated');
@@ -112,6 +113,10 @@ export default async function handler(req, res) {
                 (member) => !excludedUserIds.includes(member)
               );
 
+              console.log(
+                `Member acquisition successful : ${filteredMembers.length} 名`
+              );
+
               // 一覧を表示
               await botClient.views.open({
                 trigger_id: trigger_id,
@@ -121,10 +126,12 @@ export default async function handler(req, res) {
               console.log('ERROR:' + err);
             }
           }
+          console.log('▲ End action : ' + selectedAction);
         } else {
           // 操作不可のメッセージ表示
           try {
             await openModal(trigger_id);
+            console.log('Date unmatch');
           } catch (err) {
             console.log('ERROR:' + err);
           }
