@@ -203,8 +203,6 @@ async function upsertRecord(
       },
     });
 
-    console.log('existingRecord:', JSON.stringify(existingRecord, null, 2));
-
     if (!existingRecord) {
       // レコードが存在しない場合、作成
       await prisma.state.create({
@@ -216,7 +214,7 @@ async function upsertRecord(
         },
       });
     } else if (existingRecord.status !== selectedStatus) {
-      // レコードが存在し、selected_statusが異なる場合、更新
+      // レコードが存在し、statusが異なる場合更新
       await prisma.state.update({
         where: { id: existingRecord.id },
         data: {
