@@ -13,4 +13,7 @@ model state {
   status          String
   user            String
   channel         String
+
+  @@unique([ymd, user])
 }
+
