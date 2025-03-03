@@ -66,11 +66,11 @@ async function sendSlackMessage(channelId) {
               type: 'button',
               text: {
                 type: 'plain_text',
-                text: '🚗 出向',
+                text: '🚗 出先',
                 emoji: true,
               },
               action_id: 'button_out',
-              value: '出向',
+              value: '出先',
             },
             {
               type: 'button',

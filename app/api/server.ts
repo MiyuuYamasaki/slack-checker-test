@@ -70,7 +70,7 @@ export default async function handler(req, res) {
                         remoteCount = Number(row.count); // BigInt を通常の数値に変換
                       } else if (row.status === '退勤') {
                         leaveCount = Number(row.count);
-                      } else if (row.status === '出向') {
+                      } else if (row.status === '出先') {
                         outCount = Number(row.count);
                       }
                     });
@@ -110,6 +110,7 @@ export default async function handler(req, res) {
                 'U087M8J5EBX', // 出勤チェッカー（新）
                 'U086NCU8PUY', // TEST BOT
                 'U086QP71G7K', // SUNSUNくん
+                'U08AS8773NE', // TaskBot
               ];
 
               // 除外ユーザーを除いたリストを作成
@@ -261,7 +262,7 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
   }
 
   // ステータスの順番を固定
-  const statusOrder = ['本社', '在宅', '出向', '退勤', '休暇'];
+  const statusOrder = ['本社', '在宅', '出先', '退勤', '休暇'];
 
   // ステータスごとのテキストを作成
   const statusSections = statusOrder.map((status) => {
@@ -271,8 +272,8 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
         ? '🏢 本社勤務'
         : status === '在宅'
         ? '🏡 在宅勤務'
-        : status === '出向'
-        ? '🚗 出向先'
+        : status === '出先'
+        ? '🚗 出先'
         : status === '退勤'
         ? '👋 退勤済'
         : ':zzz: 休暇(回答無)';
@@ -349,11 +350,11 @@ async function updateMessage(
           type: 'button',
           text: {
             type: 'plain_text',
-            text: `🚗 出向 (${outCount})`,
+            text: `🚗 出先 (${outCount})`,
             emoji: true,
           },
           action_id: 'button_out',
-          value: '出向',
+          value: '出先',
         },
         {
           type: 'button',
