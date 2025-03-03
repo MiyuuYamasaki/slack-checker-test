@@ -59,6 +59,7 @@ export default async function handler(req, res) {
                 let officeCount = 0;
                 let remoteCount = 0;
                 let leaveCount = 0;
+                let outCount = 0;
 
                 await getStatusCounts(channel.id).then(
                   (data: { status: string; count: bigint }[]) => {
@@ -69,6 +70,8 @@ export default async function handler(req, res) {
                         remoteCount = Number(row.count); // BigInt を通常の数値に変換
                       } else if (row.status === '退勤') {
                         leaveCount = Number(row.count);
+                      } else if (row.status === '出向') {
+                        outCount = Number(row.count);
                       }
                     });
                   }
@@ -80,6 +83,7 @@ export default async function handler(req, res) {
                   messageText,
                   officeCount,
                   remoteCount,
+                  outCount,
                   leaveCount
                 );
               })()
@@ -257,7 +261,7 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
   }
 
   // ステータスの順番を固定
-  const statusOrder = ['本社', '在宅', '退勤', '休暇'];
+  const statusOrder = ['本社', '在宅', '出向', '退勤', '休暇'];
 
   // ステータスごとのテキストを作成
   const statusSections = statusOrder.map((status) => {
@@ -268,6 +272,8 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
         : status === '在宅'
         ? '🏡 在宅勤務'
         : status === '退勤'
+        ? '🚗 出向先'
+        : status === '出向'
         ? '👋 退勤済'
         : ':zzz: 休暇(回答無)';
 
@@ -305,6 +311,7 @@ async function updateMessage(
   messageText: string,
   officeCount: number,
   remoteCount: number,
+  outCount: number,
   leaveCount: number
 ) {
   const blocks = [
@@ -337,6 +344,16 @@ async function updateMessage(
           },
           action_id: 'button_remote',
           value: '在宅',
+        },
+        {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            text: `🚗 出向 (${outCount})`,
+            emoji: true,
+          },
+          action_id: 'button_remote',
+          value: '出向',
         },
         {
           type: 'button',

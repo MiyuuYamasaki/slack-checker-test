@@ -1,8 +1,8 @@
 import { WebClient } from '@slack/web-api';
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN;
-// const CHANNEL_ID = 'C083QUBKU9L'; #test-chatbot
-const CHANNEL_ID = 'C07HLMDLB1U'; // #team-custom-public
+const CHANNEL_ID = 'C083QUBKU9L'; // #test-chatbot
+// const CHANNEL_ID = 'C07HLMDLB1U'; // #team-custom-public
 
 // 日付のフォーマットを変更
 function getFormattedDate() {
@@ -61,6 +61,16 @@ async function sendSlackMessage(channelId) {
               },
               action_id: 'button_remote',
               value: '在宅',
+            },
+            {
+              type: 'button',
+              text: {
+                type: 'plain_text',
+                text: '🚗 出向',
+                emoji: true,
+              },
+              action_id: 'button_out',
+              value: '出向',
             },
             {
               type: 'button',
