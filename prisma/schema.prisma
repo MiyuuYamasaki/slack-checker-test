@@ -14,6 +14,6 @@ model state {
   user            String
   channel         String
 
-  @@unique([ymd, user])
+  @@unique([ymd, user, channel])
 }
 
