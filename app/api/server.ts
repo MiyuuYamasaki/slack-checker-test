@@ -352,7 +352,7 @@ async function updateMessage(
             text: `🚗 出向 (${outCount})`,
             emoji: true,
           },
-          action_id: 'button_remote',
+          action_id: 'button_out',
           value: '出向',
         },
         {
