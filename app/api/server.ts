@@ -273,7 +273,7 @@ const createModal = async (members: string[], channel: string, prisma: any) => {
         : status === '在宅'
         ? '🏡 在宅勤務'
         : status === '出先'
-        ? '🚗 出先'
+        ? '🚗 出向先勤務／お客様先へ直出'
         : status === '退勤'
         ? '👋 退勤済'
         : ':zzz: 休暇(回答無)';
